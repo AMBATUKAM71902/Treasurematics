@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --gold: #f5a623;
+    --gold-dark: #c7851a;
+    --chest-brown: #8B4513;
+    --chest-dark: #5a2d0c;
+    --key-gold: #ffd700;
+    --bg-gradient-1: #0f0c29;
+    --bg-gradient-2: #302b63;
+    --bg-gradient-3: #24243e;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --panel-bg: rgba(255,255,255,0.08);
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3));
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* ── Stars background ── */
+.stars {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
+}
+.star {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0%{opacity:.2;transform:scale(1)} 100%{opacity:1;transform:scale(1.4)} }
+
+/* ── Particles (on correct answer) ── */
+.particle-container { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
+.particle {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    animation: particleFly 1s ease-out forwards;
+}
+@keyframes particleFly {
+    0%   { opacity:1; transform: translate(0,0) scale(1); }
+    100% { opacity:0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* ── Layout ── */
+.game-wrapper {
+    position: relative; z-index: 1;
+    max-width: 720px; margin: 0 auto;
+    padding: 24px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+
+/* ── Header ── */
+.header {
+    text-align: center;
+    animation: fadeDown .6s ease-out;
+}
+.header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, var(--gold), #ffe082, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 6px rgba(245,166,35,.45));
+}
+.header p { color: #b8b5d0; margin-top: 4px; font-size: .95rem; }
+
+@keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── HUD (level, keys, score) ── */
+.hud {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    width: 100%;
+}
+.hud-item {
+    background: var(--panel-bg);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px; padding: 10px 20px;
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: .95rem;
+    backdrop-filter: blur(6px);
+    transition: transform .2s;
+}
+.hud-item:hover { transform: translateY(-2px); }
+.hud-icon { font-size: 1.3rem; }
+
+/* ── Level progress bar ── */
+.progress-bar-wrapper {
+    width: 100%; background: rgba(255,255,255,.1);
+    border-radius: 20px; height: 14px;
+    overflow: hidden; position: relative;
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f7971e, #ffd200);
+    border-radius: 20px;
+    transition: width .5s ease;
+    box-shadow: 0 0 12px rgba(255,210,0,.5);
+}
+.progress-label {
+    font-size: .78rem; color: #c3bfe0; text-align: right;
+    margin-top: 2px;
+}
+
+/* ── Main game card ── */
+.game-card {
+    width: 100%;
+    background: var(--panel-bg);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 24px;
+    padding: 32px 28px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 40px rgba(0,0,0,.35);
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    animation: cardIn .5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+@keyframes cardIn { from { opacity:0; transform:scale(.92); } to { opacity:1; transform:scale(1); } }
+
+/* Shimmer on card */
+.game-card::before {
+    content:''; position:absolute; top:-50%; left:-50%;
+    width:200%; height:200%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,210,0,.06), transparent 30%);
+    animation: shimmer 6s linear infinite;
+}
+@keyframes shimmer { to { transform: rotate(360deg); } }
+
+/* ── Chest visual ── */
+.chest-area {
+    position: relative;
+    width: 180px; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+}
+.chest-glow {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,.18) 0%, transparent 70%);
+    animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.12);opacity:1} }
+
+.chest {
+    position: relative; z-index: 2;
+    font-size: 6rem;
+    filter: drop-shadow(0 4px 16px rgba(139,69,19,.5));
+    transition: transform .4s ease;
+}
+.chest.bounce { animation: chestBounce .5s ease; }
+@keyframes chestBounce { 0%{transform:scale(1)} 30%{transform:scale(1.15)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
+
+.chest.open-anim { animation: chestOpen 1s ease forwards; }
+@keyframes chestOpen {
+    0%   { transform: scale(1) rotate(0); }
+    30%  { transform: scale(1.2) rotate(-3deg); }
+    60%  { transform: scale(1.3) rotate(3deg); }
+    100% { transform: scale(1.4) rotate(0); filter: drop-shadow(0 0 30px gold); }
+}
+
+/* Floating key */
+.floating-key {
+    position: absolute; top: -10px; right: -10px; z-index: 3;
+    font-size: 2.4rem;
+    animation: floatKey 2s ease-in-out infinite;
+    opacity: 0;
+    transition: opacity .4s;
+}
+.floating-key.visible { opacity: 1; }
+@keyframes floatKey { 0%,100%{transform:translateY(0) rotate(-10deg)} 50%{transform:translateY(-10px) rotate(10deg)} }
+
+/* ── Question area ── */
+.question-area {
+    text-align: center; z-index: 2;
+}
+.level-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    padding: 4px 16px; border-radius: 20px;
+    font-size: .8rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    color: #ffe082;
+    text-shadow: 0 2px 8px rgba(255,224,130,.3);
+    min-height: 2.5em;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Answer input ── */
+.answer-group {
+    display: flex; gap: 12px; z-index: 2;
+    flex-wrap: wrap; justify-content: center;
+}
+.answer-input {
+    width: 180px; padding: 14px 20px;
+    border: 2px solid rgba(255,255,255,.2);
+    border-radius: 16px;
+    background: rgba(255,255,255,.07);
+    color: #fff; font-size: 1.3rem; font-weight: 700;
+    text-align: center; outline: none;
+    transition: border-color .3s, box-shadow .3s;
+}
+.answer-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 16px rgba(245,166,35,.3);
+}
+.answer-input.correct { border-color: var(--success); box-shadow: 0 0 16px rgba(46,204,113,.4); }
+.answer-input.wrong   { border-color: var(--error);   box-shadow: 0 0 16px rgba(231,76,60,.4); animation: shake .4s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+
+.submit-btn {
+    padding: 14px 32px;
+    border: none; border-radius: 16px;
+    background: linear-gradient(135deg, var(--gold), #f7971e);
+    color: #3d2200; font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem; cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 4px 15px rgba(245,166,35,.35);
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,166,35,.5); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── Hint / feedback ── */
+.feedback {
+    font-weight: 700; font-size: 1rem;
+    min-height: 1.5em; z-index: 2;
+    transition: opacity .3s;
+}
+.feedback.success { color: var(--success); }
+.feedback.error   { color: var(--error); }
+.hint-text { color: #b8b5d0; font-size: .85rem; z-index: 2; }
+
+/* ── Open Treasure btn ── */
+.open-btn {
+    padding: 16px 40px;
+    border: none; border-radius: 20px;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff; font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(46,204,113,.4);
+    transition: transform .15s, box-shadow .15s;
+    animation: glowPulse 1.5s ease-in-out infinite;
+    z-index: 2;
+}
+.open-btn:hover { transform: scale(1.05); }
+@keyframes glowPulse { 0%,100%{box-shadow:0 4px 20px rgba(46,204,113,.4)} 50%{box-shadow:0 4px 35px rgba(46,204,113,.7)} }
+
+/* ── Screens ── */
+.screen { display: none; }
+.screen.active { display: flex; }
+
+/* ── Start screen ── */
+.start-screen {
+    flex-direction: column; align-items: center; gap: 24px;
+    text-align: center;
+    animation: fadeDown .6s ease-out;
+}
+.start-chest { font-size: 8rem; animation: floatKey 3s ease-in-out infinite; }
+.start-title {
+    font-family: 'Fredoka One', cursive; font-size: 2.6rem;
+    background: linear-gradient(90deg, var(--gold), #ffe082, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.start-desc { color: #b8b5d0; max-width: 420px; line-height: 1.6; }
+.start-btn {
+    padding: 18px 56px;
+    border: none; border-radius: 24px;
+    background: linear-gradient(135deg, var(--gold), #f7971e);
+    color: #3d2200; font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem; cursor: pointer;
+    box-shadow: 0 6px 25px rgba(245,166,35,.4);
+    transition: transform .15s, box-shadow .15s;
+}
+.start-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 30px rgba(245,166,35,.55); }
+
+.difficulty-selector {
+    display: flex; gap: 12px; margin-top: 4px;
+}
+.diff-btn {
+    padding: 10px 24px; border-radius: 14px;
+    border: 2px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.06);
+    color: #ccc; font-weight: 700; font-size: .9rem;
+    cursor: pointer; transition: all .2s;
+}
+.diff-btn:hover, .diff-btn.selected {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(245,166,35,.12);
+}
+
+/* ── Victory screen ── */
+.victory-screen {
+    flex-direction: column; align-items: center; gap: 20px;
+    text-align: center;
+    animation: fadeDown .6s ease-out;
+}
+.victory-chest { font-size: 7rem; animation: chestOpen 1.2s ease forwards; }
+.victory-title {
+    font-family: 'Fredoka One', cursive; font-size: 2.4rem;
+    color: var(--gold);
+}
+.victory-stats {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+}
+.stat-card {
+    background: var(--panel-bg); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 16px 24px;
+    text-align: center; backdrop-filter: blur(6px);
+}
+.stat-value { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--gold); }
+.stat-label { font-size: .8rem; color: #b8b5d0; margin-top: 2px; }
+.restart-btn {
+    padding: 14px 40px; border: none; border-radius: 18px;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff; font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(108,92,231,.4);
+    transition: transform .15s;
+}
+.restart-btn:hover { transform: translateY(-2px); }
+
+/* ── Confetti ── */
+.confetti-piece {
+    position: fixed; z-index: 9999;
+    width: 10px; height: 18px;
+    animation: confettiFall var(--fall) linear forwards;
+    opacity: 0.9;
+}
+@keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(var(--spin)); opacity: 0; }
+}
+
+/* ── Transition overlay ── */
+.level-transition {
+    position: fixed; inset:0; z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(15,12,41,.92);
+    backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+}
+.level-transition.show { opacity:1; pointer-events:auto; }
+.level-transition-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem; color: var(--gold);
+    animation: zoomIn .5s ease-out;
+}
+@keyframes zoomIn { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+    .header h1 { font-size: 1.7rem; }
+    .question-text { font-size: 1.4rem; }
+    .chest { font-size: 4.5rem; }
+    .start-title { font-size: 1.8rem; }
+    .start-chest { font-size: 5rem; }
+    .game-card { padding: 24px 16px; }
+}

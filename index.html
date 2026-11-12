@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗝️ Math Treasure Quest</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Particle container -->
+<div class="particle-container" id="particles"></div>
+
+<!-- Level transition overlay -->
+<div class="level-transition" id="levelTransition">
+    <div class="level-transition-text" id="levelTransitionText"></div>
+</div>
+
+<!-- ═══════ START SCREEN ═══════ -->
+<div class="game-wrapper">
+    <div class="screen start-screen active" id="startScreen">
+        <div class="start-chest">🏴‍☠️</div>
+        <div class="start-title">Math Treasure Quest</div>
+        <p class="start-desc">
+            Solve math puzzles to earn keys 🗝️ and unlock treasure chests 📦 across <strong>10 levels</strong>! 
+            Each level gets harder. Can you conquer them all and claim the ultimate treasure?
+        </p>
+        <div>
+            <p style="color:#b8b5d0; font-size:.85rem; margin-bottom:8px;">Choose difficulty:</p>
+            <div class="difficulty-selector">
+                <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">🟢 Easy</button>
+                <button class="diff-btn selected" data-diff="normal" onclick="selectDifficulty('normal')">🟡 Normal</button>
+                <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">🔴 Hard</button>
+            </div>
+        </div>
+        <button class="start-btn" onclick="startGame()">⚔️ Start Quest</button>
+    </div>
+
+    <!-- ═══════ GAME SCREEN ═══════ -->
+    <div class="screen" id="gameScreen" style="flex-direction:column; align-items:center; gap:20px; width:100%;">
+        <div class="header">
+            <h1>🗝️ Math Treasure Quest</h1>
+            <p>Solve the puzzle · Get the key · Open the treasure!</p>
+        </div>
+
+        <div class="hud">
+            <div class="hud-item"><span class="hud-icon">📜</span> Level <span id="hudLevel">1</span> / 10</div>
+            <div class="hud-item"><span class="hud-icon">🗝️</span> Keys: <span id="hudKeys">0</span></div>
+            <div class="hud-item"><span class="hud-icon">⭐</span> Score: <span id="hudScore">0</span></div>
+            <div class="hud-item"><span class="hud-icon">❤️</span> Lives: <span id="hudLives">3</span></div>
+        </div>
+
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar" id="progressBar" style="width:10%"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Level 1 of 10</div>
+
+        <div class="game-card" id="gameCard">
+            <!-- Puzzle state -->
+            <div id="puzzleState" style="display:flex; flex-direction:column; align-items:center; gap:20px; width:100%;">
+                <div class="chest-area">
+                    <div class="chest-glow"></div>
+                    <div class="chest" id="chestEmoji">🔒</div>
+                    <div class="floating-key" id="floatingKey">🗝️</div>
+                </div>
+
+                <div class="question-area">
+                    <div class="level-badge" id="levelBadge">Level 1 — Addition</div>
+                    <div class="question-text" id="questionText">5 + 3 = ?</div>
+                </div>
+
+                <div class="answer-group">
+                    <input type="number" class="answer-input" id="answerInput" placeholder="?" autocomplete="off">
+                    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">🔓 Unlock</button>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+                <div class="hint-text" id="hintText"></div>
+            </div>
+
+            <!-- Treasure found state -->
+            <div id="treasureState" style="display:none; flex-direction:column; align-items:center; gap:20px; width:100%;">
+                <div class="chest-area">
+                    <div class="chest-glow" style="background:radial-gradient(circle,rgba(46,204,113,.25) 0%,transparent 70%)"></div>
+                    <div class="chest" id="openChest">🎁</div>
+                </div>
+                <p style="font-family:'Fredoka One',cursive; font-size:1.4rem; color:var(--success); z-index:2;">
+                    🎉 Key found! Open the treasure!
+                </p>
+                <button class="open-btn" onclick="openTreasure()">🗝️ Open Treasure</button>
+            </div>
+
+            <!-- Reward state -->
+            <div id="rewardState" style="display:none; flex-direction:column; align-items:center; gap:16px; width:100%; text-align:center;">
+                <div style="font-size:5rem;" id="rewardEmoji">💎</div>
+                <p style="font-family:'Fredoka One',cursive; font-size:1.3rem; color:var(--gold); z-index:2;" id="rewardText">
+                    You found a Diamond! +100 pts
+                </p>
+                <button class="submit-btn" onclick="nextLevel()" id="nextBtn" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff;">
+                    ➡️ Next Level
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ VICTORY SCREEN ═══════ -->
+    <div class="screen victory-screen" id="victoryScreen">
+        <div class="victory-chest">🏆</div>
+        <div class="victory-title">🎊 You Conquered the Quest! 🎊</div>
+        <p style="color:#b8b5d0; max-width:400px; line-height:1.5;">
+            All treasures have been unlocked! You are a true Math Treasure Master!
+        </p>
+        <div class="victory-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="finalScore">0</div>
+                <div class="stat-label">Total Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="finalKeys">0</div>
+                <div class="stat-label">Keys Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="finalAttempts">0</div>
+                <div class="stat-label">Attempts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="finalTime">0s</div>
+                <div class="stat-label">Time</div>
+            </div>
+        </div>
+        <button class="restart-btn" onclick="restartGame()">🔄 Play Again</button>
+    </div>
+
+    <!-- ═══════ GAME OVER SCREEN ═══════ -->
+    <div class="screen victory-screen" id="gameOverScreen">
+        <div style="font-size:7rem;">💀</div>
+        <div class="victory-title" style="color:#e74c3c;">Game Over!</div>
+        <p style="color:#b8b5d0; max-width:400px; line-height:1.5;">
+            You ran out of lives! But don't give up — try again!
+        </p>
+        <div class="victory-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="goScore">0</div>
+                <div class="stat-label">Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="goLevel">0</div>
+                <div class="stat-label">Level Reached</div>
+            </div>
+        </div>
+        <button class="restart-btn" onclick="restartGame()">🔄 Try Again</button>
+    </div>
+</div>
+
+<script type="module" src="assets/js/main.js"></script>
+</body>
+</html>
